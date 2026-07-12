@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="fonts/inter.css">
+  <style>
+    body {
+      width: 350px;
+      margin: 0;
+      padding: 16px;
+      /* Background gradient ala cyberpunk dark mesh */
+      background: radial-gradient(circle at 10% 20%, rgb(18, 20, 26) 0%, rgb(11, 12, 16) 100%);
+      color: #e0e0e0;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 14px;
+    }
+    .logo {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+    }
+    h2 { margin: 0; font-size: 16px; font-weight: 700; color: #ffffff; letter-spacing: 0.2px; }
+    h3 { margin: 2px 0 0 0; font-size: 11px; font-weight: 600; color: #8ba0b2; text-transform: uppercase; letter-spacing: 0.5px; }
+    
+    /* GLASSMORPHISM UTILITIES */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    }
+
+    /* BADGE BTNS (Buat Copy Options) */
+    .badge-btn {
+      background: rgba(59, 130, 246, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0 10px;
+      height: 24px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .badge-btn:hover {
+      background: rgba(59, 130, 246, 0.4);
+      color: #fff;
+    }
+
+    /* GLASS SELECT (Dropdown) */
+    .glass-select {
+      background: rgba(0,0,0,0.25);
+      color: #93c5fd;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 0 20px 0 8px;
+      height: 24px;
+      font-size: 10px;
+      font-weight: 500;
+      border-radius: 4px;
+      outline: none;
+      cursor: pointer;
+      width: 140px;
+      box-sizing: border-box;
+      font-family: inherit;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2393c5fd' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      background-size: 12px;
+      transition: all 0.2s;
+    }
+    .glass-select:hover {
+      background-color: rgba(59, 130, 246, 0.1);
+      border-color: rgba(59, 130, 246, 0.5);
+    }
+    .glass-select option {
+      background: #111827;
+      color: #fff;
+    }
+
+    /* INLINE CONFIRM BTNS */
+    .confirm-yes { background: rgba(239,68,68,0.15) !important; }
+    .confirm-yes:hover { background: rgba(239,68,68,0.35) !important; transform: scale(1.05); }
+    .confirm-no { background: rgba(255,255,255,0.05) !important; }
+    .confirm-no:hover { background: rgba(255,255,255,0.2) !important; transform: scale(1.05); }
+
+    /* SEARCH & CREATE */
+    .search-container {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+    .search-container:focus-within { 
+      border-color: rgba(59, 130, 246, 0.5); 
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
+    }
+    .search-container svg { width: 16px; height: 16px; fill: #8ba0b2; margin-right: 10px; transition: fill 0.3s; }
+    .search-container:focus-within svg { fill: #3b82f6; }
+    
+    #searchSession {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+    #searchSession::placeholder { color: rgba(255,255,255,0.4); font-weight: 500; }
+
+    /* CREATE CONTAINER */
+    .create-container {
+      display: flex;
+      align-items: center;
+      padding: 8px 8px 8px 14px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+    .create-container:focus-within { 
+      border-color: rgba(16, 185, 129, 0.5); 
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+    .create-container svg { width: 14px; height: 14px; fill: #10b981; margin-right: 10px; }
+    
+    #sessionName {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+    }
+    #sessionName::placeholder { color: rgba(255,255,255,0.3); font-weight: 500; }
+    
+    #saveBtn {
+      background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+      color: #111;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 10px rgba(255,255,255,0.1);
+    }
+    #saveBtn:hover { 
+      transform: translateY(-1px);
+      box-shadow: 0 6px 15px rgba(255,255,255,0.2);
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+    #saveBtn:active { transform: scale(0.96) translateY(0); }
+
+    /* DIVIDER */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+      margin-bottom: 16px;
+      width: 100%;
+    }
+
+    /* SESSION LIST */
+    #sessionList {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 260px;
+      overflow-y: auto;
+      padding: 4px 6px 4px 4px; /* Extra padding so shadow/border isn't clipped */
+      margin: -4px 0 0 -4px; /* Shift back to align with the parent box */
+    }
+    #sessionList::-webkit-scrollbar { width: 4px; }
+    #sessionList::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+    
+    .session-item {
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .session-item:hover { 
+      background: rgba(255, 255, 255, 0.06); 
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateY(-1px);
+    }
+    
+    .session-item.active {
+      border-color: rgba(59, 130, 246, 0.4);
+      background: rgba(59, 130, 246, 0.08);
+      box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    }
+    
+    .session-info { display: flex; flex-direction: column; overflow: hidden; }
+    .session-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; color: #ffffff; letter-spacing: 0.2px; }
+    .active-badge { font-size: 10px; color: #60a5fa; font-weight: 700; margin-top: 4px; letter-spacing: 0.5px; text-shadow: 0 0 10px rgba(96,165,250,0.5); }
+
+    .action-btns { display: flex; gap: 8px; }
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.2s;
+    }
+    .icon-btn svg { width: 14px; height: 14px; fill: rgba(255,255,255,0.5); transition: all 0.2s; }
+    
+    .icon-btn.load-btn:hover { background: rgba(59,130,246,0.15); transform: translateY(-1px); }
+    .icon-btn.load-btn:hover svg { fill: #60a5fa; } 
+    
+    .icon-btn.export-btn:hover { background: rgba(245,158,11,0.15); transform: translateY(-1px); }
+    .icon-btn.export-btn:hover svg { fill: #fbbf24; } 
+    
+    .icon-btn.del-btn:hover { background: rgba(239,68,68,0.15); transform: translateY(-1px); }
+    .icon-btn.del-btn:hover svg { fill: #f87171; } 
+    
+    .empty-state { color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px; font-weight: 500; }
+  </style>
+</head>
+<body>
+  <div class="header" style="justify-content: space-between;">
+    <div style="display:flex; align-items:center; gap:14px;">
+      <img src="icon128.png" class="logo" alt="Logo">
+      <div>
+        <h2>RC Session Manager</h2>
+        <h3 id="currentDomain">LOADING...</h3>
+      </div>
+    </div>
+    <div style="display:flex; align-items:center;">
+      <button id="clearDataBtn" class="icon-btn" title="Safe logout — clears browser cookies" style="background:rgba(239,68,68,0.15);">
+        <svg viewBox="0 0 24 24" fill="#ef4444"><path d="M19.36 2.72L20.78 4.14L15.06 9.85C16.13 11.39 16.28 13.24 15.38 14.44L9.06 8.12C10.26 7.22 12.11 7.37 13.65 8.44L19.36 2.72M5.93 17.57C3.92 15.56 2.69 13.16 2.35 10.92L7.23 8.83L14.67 16.27L12.58 21.15C10.34 20.81 7.94 19.58 5.93 17.57Z"/></svg>
+      </button>
+      <div id="confirmClearData" style="display:none; gap:6px; align-items:center;">
+        <span style="font-size:10px; color:#f87171; font-weight:700; margin-right:4px;">LOGOUT</span>
+        <button id="yesClearBtn" class="icon-btn confirm-yes"><svg viewBox="0 0 24 24" fill="#f87171"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></button>
+        <button id="noClearBtn" class="icon-btn confirm-no"><svg viewBox="0 0 24 24" fill="#fff"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="search-container glass-panel">
+    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+    <input type="text" id="searchSession" placeholder="Search profiles..." autocomplete="off">
+  </div>
+
+  <div class="create-container glass-panel">
+    <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+    <input type="text" id="sessionName" placeholder="Name a new session..." autocomplete="off">
+    <button id="saveBtn">Create ></button>
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div id="sessionList"></div>
+  <script src="utils.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
