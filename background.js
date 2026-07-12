@@ -244,20 +244,25 @@ async function handleLoadSession(sessionName, currentUrl, tabId) {
 
 async function handleClearLocalData(currentUrl, tabId) {
   try {
-    console.log("[SCM] clearLocalData called. URL:", currentUrl, "tabId:", tabId);
     const domain = getBaseDomain(currentUrl);
-    if (!domain) { console.log("[SCM] No domain found!"); return { success: false }; }
+    if (!domain) return { success: false };
 
     const ecosystemId = getEcosystemId(domain);
     const domainsToSync = getDomainsForEcosystem(ecosystemId, domain);
-    console.log("[SCM] Ecosystem:", ecosystemId, "Domains:", domainsToSync);
-    
+
     if (tabId) {
       await injectStorageToTab(tabId, { ls: "{}", ss: "{}" });
     }
 
-    await clearCookiesForDomains(domainsToSync);
-    await clearCookiesForUrl(currentUrl);
+    for (const d of domainsToSync) {
+      await new Promise(resolve => {
+        chrome.browsingData.remove(
+          { origins: [`https://${d}`, `http://${d}`] },
+          { cookies: true, localStorage: true, sessionStorage: true },
+          resolve
+        );
+      });
+    }
 
     const saveResult = await withStorageLock(ecosystemId, async () => {
       const result = await chrome.storage.local.get(ecosystemId);
@@ -275,7 +280,6 @@ async function handleClearLocalData(currentUrl, tabId) {
 
     return { success: true };
   } catch (e) {
-    console.log("[SCM] clearLocalData error:", e);
     return { success: false, error: e.message };
   }
 }
