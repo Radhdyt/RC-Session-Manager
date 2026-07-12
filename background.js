@@ -85,7 +85,7 @@ async function getAllCookiesForDomains(domains) {
   const seen = new Set();
   const allCookies = [];
   for (const domain of domains) {
-    const cookies = await chrome.cookies.getAll({ domain: domain });
+    const cookies = await chrome.cookies.getAll({ url: `https://${domain}/` });
     for (const cookie of cookies) {
       const key = `${cookie.name}|${cookie.domain}|${cookie.path}`;
       if (!seen.has(key)) {
@@ -105,7 +105,7 @@ function buildCookieUrl(cookie) {
 async function clearCookiesForDomains(domains) {
   const allRemovals = [];
   for (const domain of domains) {
-    const cookies = await chrome.cookies.getAll({ domain: domain });
+    const cookies = await chrome.cookies.getAll({ url: `https://${domain}/` });
     for (const cookie of cookies) {
       allRemovals.push(
         chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
@@ -234,33 +234,37 @@ async function handleLoadSession(sessionName, currentUrl, tabId) {
 }
 
 async function handleClearLocalData(currentUrl, tabId) {
-  const domain = getBaseDomain(currentUrl);
-  if (!domain) return { success: false };
+  try {
+    const domain = getBaseDomain(currentUrl);
+    if (!domain) return { success: false };
 
-  const ecosystemId = getEcosystemId(domain);
-  const domainsToSync = getDomainsForEcosystem(ecosystemId, domain);
-  
-  if (tabId) {
-    await injectStorageToTab(tabId, { ls: "{}", ss: "{}" });
-  }
-
-  await clearCookiesForDomains(domainsToSync);
-
-  const saveResult = await withStorageLock(ecosystemId, async () => {
-    const result = await chrome.storage.local.get(ecosystemId);
-    if (result[ecosystemId]) {
-      result[ecosystemId].activeSessionName = "";
-      return saveEcosystem(ecosystemId, result[ecosystemId]);
+    const ecosystemId = getEcosystemId(domain);
+    const domainsToSync = getDomainsForEcosystem(ecosystemId, domain);
+    
+    if (tabId) {
+      await injectStorageToTab(tabId, { ls: "{}", ss: "{}" });
     }
+
+    await clearCookiesForDomains(domainsToSync);
+
+    const saveResult = await withStorageLock(ecosystemId, async () => {
+      const result = await chrome.storage.local.get(ecosystemId);
+      if (result[ecosystemId]) {
+        result[ecosystemId].activeSessionName = "";
+        return saveEcosystem(ecosystemId, result[ecosystemId]);
+      }
+      return { success: true };
+    });
+
+    if (!saveResult.success) return saveResult;
+    setCachedActiveSession(ecosystemId, "");
+
+    if (tabId) chrome.tabs.reload(tabId);
+
     return { success: true };
-  });
-
-  if (!saveResult.success) return saveResult;
-  setCachedActiveSession(ecosystemId, "");
-
-  if (tabId) chrome.tabs.reload(tabId);
-
-  return { success: true };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
 }
 
 // ---- BADGE UPDATER LOGIC ----
