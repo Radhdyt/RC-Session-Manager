@@ -85,12 +85,14 @@ async function getAllCookiesForDomains(domains) {
   const seen = new Set();
   const allCookies = [];
   for (const domain of domains) {
-    const cookies = await chrome.cookies.getAll({ domain: domain });
-    for (const cookie of cookies) {
-      const key = `${cookie.name}|${cookie.domain}|${cookie.path}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        allCookies.push(cookie);
+    for (const scheme of ["https", "http"]) {
+      const cookies = await chrome.cookies.getAll({ url: `${scheme}://${domain}/` });
+      for (const cookie of cookies) {
+        const key = `${cookie.name}|${cookie.domain}|${cookie.path}`;
+        if (!seen.has(key)) {
+          seen.add(key);
+          allCookies.push(cookie);
+        }
       }
     }
   }
@@ -105,12 +107,14 @@ function buildCookieUrl(cookie) {
 async function clearCookiesForDomains(domains) {
   const allRemovals = [];
   for (const domain of domains) {
-    const cookies = await chrome.cookies.getAll({ domain: domain });
-    for (const cookie of cookies) {
-      allRemovals.push(
-        chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
-          .catch(() => {})
-      );
+    for (const scheme of ["https", "http"]) {
+      const cookies = await chrome.cookies.getAll({ url: `${scheme}://${domain}/` });
+      for (const cookie of cookies) {
+        allRemovals.push(
+          chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
+            .catch(() => {})
+        );
+      }
     }
   }
   await Promise.all(allRemovals);
@@ -254,15 +258,19 @@ async function handleClearLocalData(currentUrl, tabId) {
       await injectStorageToTab(tabId, { ls: "{}", ss: "{}" });
     }
 
+    const allRemovals = [];
     for (const d of domainsToSync) {
-      await new Promise(resolve => {
-        chrome.browsingData.remove(
-          { origins: [`https://${d}`, `http://${d}`] },
-          { cookies: true, localStorage: true, sessionStorage: true },
-          resolve
-        );
-      });
+      for (const scheme of ["https", "http"]) {
+        const cookies = await chrome.cookies.getAll({ url: `${scheme}://${d}/` });
+        for (const cookie of cookies) {
+          allRemovals.push(
+            chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
+              .catch(() => {})
+          );
+        }
+      }
     }
+    await Promise.all(allRemovals);
 
     const saveResult = await withStorageLock(ecosystemId, async () => {
       const result = await chrome.storage.local.get(ecosystemId);

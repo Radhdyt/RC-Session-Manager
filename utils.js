@@ -72,7 +72,7 @@ function sortSessions(sessions, activeSessionName) {
 // ---- ENCRYPTION ----
 
 async function getOrCreateCryptoKey() {
-  const result = await chrome.storage.session.get('_ck');
+  const result = await chrome.storage.local.get('_ck');
   if (result._ck) {
     return await crypto.subtle.importKey(
       'jwk', result._ck,
@@ -85,7 +85,7 @@ async function getOrCreateCryptoKey() {
     true, ['encrypt', 'decrypt']
   );
   const exported = await crypto.subtle.exportKey('jwk', key);
-  await chrome.storage.session.set({ _ck: exported });
+  await chrome.storage.local.set({ _ck: exported });
   return key;
 }
 
@@ -118,7 +118,11 @@ async function encryptCookies(cookies) {
 async function decryptCookies(cookies) {
   return Promise.all(cookies.map(async c => {
     if (c.value && typeof c.value === 'object' && c.value.iv && c.value.ct) {
-      return { ...c, value: await decryptString(c.value) };
+      try {
+        return { ...c, value: await decryptString(c.value) };
+      } catch {
+        return { ...c, value: '' };
+      }
     }
     return c;
   }));
