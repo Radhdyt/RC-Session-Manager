@@ -83,16 +83,18 @@ async function extractStorageFromTab(tabId) {
 
 async function getAllCookiesForDomains(domains) {
   const seen = new Set();
-  const allCookies = await chrome.cookies.getAll({});
-  return allCookies.filter(cookie => {
-    if (!domains.some(d => cookie.domain === d || cookie.domain === '.' + d || cookie.domain.endsWith('.' + d))) {
-      return false;
+  const allCookies = [];
+  for (const domain of domains) {
+    const cookies = await chrome.cookies.getAll({ domain: domain });
+    for (const cookie of cookies) {
+      const key = `${cookie.name}|${cookie.domain}|${cookie.path}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        allCookies.push(cookie);
+      }
     }
-    const key = `${cookie.name}|${cookie.domain}|${cookie.path}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  }
+  return allCookies;
 }
 
 function buildCookieUrl(cookie) {
@@ -101,11 +103,22 @@ function buildCookieUrl(cookie) {
 }
 
 async function clearCookiesForDomains(domains) {
-  const allCookies = await chrome.cookies.getAll({});
-  const toRemove = allCookies.filter(cookie =>
-    domains.some(d => cookie.domain === d || cookie.domain === '.' + d || cookie.domain.endsWith('.' + d))
-  );
-  const allRemovals = toRemove.map(cookie =>
+  const allRemovals = [];
+  for (const domain of domains) {
+    const cookies = await chrome.cookies.getAll({ domain: domain });
+    for (const cookie of cookies) {
+      allRemovals.push(
+        chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
+          .catch(() => {})
+      );
+    }
+  }
+  await Promise.all(allRemovals);
+}
+
+async function clearCookiesForUrl(url) {
+  const cookies = await chrome.cookies.getAll({ url });
+  const allRemovals = cookies.map(cookie =>
     chrome.cookies.remove({ url: buildCookieUrl(cookie), name: cookie.name })
       .catch(() => {})
   );
@@ -231,17 +244,20 @@ async function handleLoadSession(sessionName, currentUrl, tabId) {
 
 async function handleClearLocalData(currentUrl, tabId) {
   try {
+    console.log("[SCM] clearLocalData called. URL:", currentUrl, "tabId:", tabId);
     const domain = getBaseDomain(currentUrl);
-    if (!domain) return { success: false };
+    if (!domain) { console.log("[SCM] No domain found!"); return { success: false }; }
 
     const ecosystemId = getEcosystemId(domain);
     const domainsToSync = getDomainsForEcosystem(ecosystemId, domain);
+    console.log("[SCM] Ecosystem:", ecosystemId, "Domains:", domainsToSync);
     
     if (tabId) {
       await injectStorageToTab(tabId, { ls: "{}", ss: "{}" });
     }
 
     await clearCookiesForDomains(domainsToSync);
+    await clearCookiesForUrl(currentUrl);
 
     const saveResult = await withStorageLock(ecosystemId, async () => {
       const result = await chrome.storage.local.get(ecosystemId);
@@ -259,6 +275,7 @@ async function handleClearLocalData(currentUrl, tabId) {
 
     return { success: true };
   } catch (e) {
+    console.log("[SCM] clearLocalData error:", e);
     return { success: false, error: e.message };
   }
 }
