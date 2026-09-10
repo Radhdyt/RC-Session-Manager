@@ -1,22 +1,60 @@
 # RC Session Manager
 
-Sebuah ekstensi Chrome VIP berdesain estetik (Glassmorphism) untuk mengatur, menyimpan, dan melakukan pergantian banyak akun secara instan tanpa perlu repot login/logout manual. Sangat cocok digunakan untuk mengelola puluhan akun *Game* (misal Hoyolab Web Event), Google, hingga Facebook.
+Chrome extension (Manifest V3) premium dengan desain **Glassmorphism** untuk mengelola banyak akun secara instan, tanpa login/logout manual. Data sesi tersimpan **100% lokal** di IndexedDB browser, tanpa server pihak ketiga.
 
 ## Fitur Unggulan
-- ⚡ **Auto-Switching Session**: Pindah profil dengan cepat tanpa password. Ekstensi secara otomatis menyimpan dan memuat Cookies asli dari browser.
-- 🎨 **Glassmorphism UI**: Antarmuka kaca buram (*glassmorphism*) yang modern, dilengkapi micro-animations, neon hover, dan styling premium ala dashboard hacker.
-- 🧹 **Safe Local Logout**: Bersihkan semua cookies secara instan dan aman dari deteksi dengan satu klik (Broom icon), tanpa terdeteksi oleh server.
-- 📝 **Smart Cookie Extractor**: Ekstensi akan beradaptasi dengan website yang sedang Anda kunjungi dan menyajikan tombol ekstrak *raw value cookie* spesifik (contoh: hanya LTOKEN/CTOKEN di Hoyoverse).
-- 🗂 **Local Database**: Semua sesi Anda tersimpan 100% secara lokal di dalam browser Anda, tanpa campur tangan cloud server pihak ketiga. Data Anda aman.
 
-## Cara Install
-1. Buka browser Chrome atau Brave.
-2. Ketik `chrome://extensions/` atau `brave://extensions/` di address bar.
-3. Aktifkan **Developer mode** di pojok kanan atas.
-4. Klik **Load unpacked** dan pilih folder repository ini.
-5. Ekstensi siap digunakan!
+- **Auto-Switching Session**: pindah profil cepat tanpa password; ekstensi menyimpan & memuat cookies asli browser.
+- **Smart Cookie Extractor**: beradaptasi dengan website yang dikunjungi, tombol ekstrak raw cookie spesifik (misal hanya `LTOKEN`/`CTOKEN` di Hoyoverse).
+- **Safe Local Logout**: bersihkan cookies sekali klik, tanpa terdeteksi server.
+- **DOM Storage Injector**: dukungan penyimpanan DOM/local untuk kompatibilitas sesi yang lebih luas.
+- **Glassmorphism UI**: micro-animations, neon hover, styling premium.
+
+## Tech Stack
+
+| Layer | Teknologi |
+|-------|-----------|
+| Extension | Chrome Extension API (Manifest V3) |
+| Bahasa | JavaScript (vanilla) |
+| Storage | IndexedDB |
+| Kualitas | ESLint 9, Prettier 3 |
+| Testing | Jest 29 |
+
+## Struktur Project
+
+```
+├── manifest.json      # Konfigurasi extension (MV3)
+├── background.js      # Service worker (logic background)
+├── popup.html         # UI popup
+├── popup.js           # Logic UI popup
+├── utils.js           # Utility functions (cookie, session)
+├── tests/utils.test.js# Unit tests
+├── fonts/             # Aset font
+├── icon16/48/128.png  # Ikon extension
+├── jest.config.js
+├── eslint.config.js
+└── .prettierrc
+```
+
+## Cara Install (Development)
+
+1. Buka `chrome://extensions/` (Chrome) atau `brave://extensions/` (Brave).
+2. Aktifkan **Developer mode** (pojok kanan atas).
+3. Klik **Load unpacked** dan pilih folder repository ini.
+4. Extension siap digunakan.
+
+## Development & Testing
+
+```bash
+npm install
+npm run lint        # ESLint
+npm run lint:fix    # Auto-fix ESLint
+npm run format      # Prettier
+npm run format:check
+npm test            # Jest unit tests (node --experimental-vm-modules)
+```
 
 ## Disclaimer
-Tool ini dibuat untuk tujuan efisiensi dan personal use. Penulis tidak bertanggung jawab atas penyalahgunaan atau konsekuensi dari pelanggaran TOS layanan pihak ketiga.
 
-*Powered by Cook45 & Clack*
+Tool dibuat untuk efisiensi & personal use. Penulis tidak bertanggung jawab atas penyalahgunaan atau
+pelanggaran ToS layanan pihak ketiga. Gunakan dengan bijak.
