@@ -54,7 +54,7 @@ npm run format:check
 npm test            # Jest unit tests (node --experimental-vm-modules)
 ```
 
-## Disclaimer
+## Catatan
 
-Tool dibuat untuk efisiensi & personal use. Penulis tidak bertanggung jawab atas penyalahgunaan atau
-pelanggaran ToS layanan pihak ketiga. Gunakan dengan bijak.
+Semua data sesi tersimpan lokal di IndexedDB browser. Tidak ada server, tidak ada telemetri, dan tidak
+ada data yang keluar dari perangkat. Ekstensi hanya membaca dan menulis cookies atas tindakan pengguna.
