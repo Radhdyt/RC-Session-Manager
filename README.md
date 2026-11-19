@@ -56,5 +56,11 @@ npm test            # Jest unit tests (node --experimental-vm-modules)
 
 ## Catatan
 
-Semua data sesi tersimpan lokal di IndexedDB browser. Tidak ada server, tidak ada telemetri, dan tidak
+Semua data sesi tersimpan lokal di `chrome.storage.local` browser (cookie dienkripsi AES-GCM 256-bit dengan kunci yang dibuat lokal saat instalasi pertama). Tidak ada server, tidak ada telemetri, dan tidak
 ada data yang keluar dari perangkat. Ekstensi hanya membaca dan menulis cookies atas tindakan pengguna.
+
+### Catatan versi 2.4
+
+Sesi yang disimpan di versi 2.3 atau lebih lama **tidak bisa dipulihkan**. Bug di `getOrCreateCryptoKey()`
+membuat setiap cookie pada save pertama dienkripsi dengan kunci berbeda, dan hanya kunci terakhir yang
+tersimpan — sisanya jadi ciphertext mati. Login ulang lalu simpan sesi baru setelah update.

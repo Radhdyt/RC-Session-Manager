@@ -1,6 +1,6 @@
 {
   "name": "rc-session-manager",
-  "version": "2.2",
+  "version": "2.4",
   "description": "Premium Local Session Manager with Ecosystem Sync & DOM Storage Injector",
   "scripts": {
     "lint": "eslint .",

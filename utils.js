@@ -71,7 +71,18 @@ function sortSessions(sessions, activeSessionName) {
 
 // ---- ENCRYPTION ----
 
-async function getOrCreateCryptoKey() {
+// Exactly one key per extension install. Concurrent callers MUST share the same
+// promise: encryptCookies() fans out with Promise.all, so without memoisation
+// every cookie races to generate its own key, each one overwrites `_ck`, and
+// only the cookie encrypted with the last key can ever be decrypted again.
+let cryptoKeyPromise = null;
+
+// Only the service worker may mint a key. The popup shares this file and can
+// reach this function through the copy button; if `_ck` were ever missing there
+// it would generate a fresh key and overwrite the one every saved session needs.
+const CAN_MINT_KEY = typeof document === 'undefined';
+
+async function loadOrCreateCryptoKey() {
   const result = await chrome.storage.local.get('_ck');
   if (result._ck) {
     return await crypto.subtle.importKey(
@@ -80,6 +91,9 @@ async function getOrCreateCryptoKey() {
       true, ['encrypt', 'decrypt']
     );
   }
+  if (!CAN_MINT_KEY) {
+    throw new Error('Encryption key missing; refusing to mint one outside the service worker');
+  }
   const key = await crypto.subtle.generateKey(
     { name: 'AES-GCM', length: 256 },
     true, ['encrypt', 'decrypt']
@@ -87,6 +101,16 @@ async function getOrCreateCryptoKey() {
   const exported = await crypto.subtle.exportKey('jwk', key);
   await chrome.storage.local.set({ _ck: exported });
   return key;
+}
+
+function getOrCreateCryptoKey() {
+  if (!cryptoKeyPromise) {
+    cryptoKeyPromise = loadOrCreateCryptoKey().catch((e) => {
+      cryptoKeyPromise = null; // transient failure: allow the next call to retry
+      throw e;
+    });
+  }
+  return cryptoKeyPromise;
 }
 
 async function encryptString(value) {
@@ -120,8 +144,11 @@ async function decryptCookies(cookies) {
     if (c.value && typeof c.value === 'object' && c.value.iv && c.value.ct) {
       try {
         return { ...c, value: await decryptString(c.value) };
-      } catch {
-        return { ...c, value: '' };
+      } catch (e) {
+        // Fail closed on this cookie, but never silently: a blank value here
+        // means the session restores logged out with no visible reason.
+        console.error(`decrypt failed for cookie "${c.name}"`, e);
+        return { ...c, value: '', _decryptFailed: true };
       }
     }
     return c;
